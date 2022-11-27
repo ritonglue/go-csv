@@ -273,7 +273,7 @@ public class CSVEngine<T> {
 	}
 
 	private void addLifeCycle(CallbackEnum callback, Method method, String text) {
-		if(method.getAnnotation(callback.getCallbackAnnotation()) != null) {
+		if(callback.hasAnnotation(method)) {
 			method.setAccessible(true);
 			var o = this.callbacks.put(callback, new Callback(method));
 			if(o != null) {
