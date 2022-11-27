@@ -408,6 +408,11 @@ public class CSVEngine<T> {
 			Consumer<? super T> prePersist = callbacks.get(CallbackEnum.PRE_PERSIST);
 			for(T t : list) {
 				List<String> values = new ArrayList<>();
+
+				if(prePersist != null) {
+					prePersist.accept(t);
+				}
+
 				for(AnnotationStorer a : storers) {
 					Field field = a.getField();
 					Method getter = a.getGetter();
@@ -425,12 +430,8 @@ public class CSVEngine<T> {
 					String s = converter.getAsString(value);
 					values.add(s);
 				}
-				if(prePersist != null) {
-					prePersist.accept(t);
-				}
 
 				printer.printRecord(values);
-
 				if(postPersist != null) {
 					postPersist.accept(t);
 				}

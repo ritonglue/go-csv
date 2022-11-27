@@ -75,8 +75,8 @@ public class LifeCycleTest {
 	}
 
 	@Test
-	public void testPersis() throws IOException {
-		String csv = "firstname,lastname\r\nJohn,Lewis\r\n";
+	public void testPersist() throws IOException {
+		String csv = "firstname\r\nJohn\r\n";
 		CSVEngine<P2> engine = CSVEngine.builder(P2.class)
 				.mode(Mode.NAMED)
 				.build();
@@ -85,30 +85,25 @@ public class LifeCycleTest {
 		assertEquals(1, list.size());
 		P2 p = list.get(0);
 		assertEquals("John", p.getFirstname());
-		assertEquals("Lewis", p.getLastname());
-		assertEquals(0, p.getI());
 
 		StringWriter writer = new StringWriter();
 		engine.write(list, writer, CSVFormat.DEFAULT);
 		String tmp = writer.toString();
-		assertEquals(csv, tmp);
-		assertEquals(20, p.getI());
+		assertEquals("firstname\r\njohn\r\n", tmp);
+		assertEquals("JOHN", p.getFirstname());
 	}
 
 	public static class P2 {
 		private String firstname;
-		private String lastname;
-		@Transient
-		private int i;
 
 		@PrePersist
-		private void prePerist() {
-			i = 10;
+		private void prePersist() {
+			firstname = firstname.toLowerCase();
 		}
 
 		@PostPersist
 		private void postPersist() {
-			i = 20;
+			firstname = firstname.toUpperCase();
 		}
 
 		public String getFirstname() {
@@ -117,18 +112,6 @@ public class LifeCycleTest {
 
 		public void setFirstname(String firstname) {
 			this.firstname = firstname;
-		}
-
-		public String getLastname() {
-			return lastname;
-		}
-
-		public void setLastname(String lastname) {
-			this.lastname = lastname;
-		}
-
-		public int getI() {
-			return i;
 		}
 	}
 }
