@@ -13,10 +13,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -47,6 +49,7 @@ public class CSVEngine<T> {
 	private final List<AnnotationStorer> storers = new ArrayList<>();
 	private final CallbackIndex callback;
 	private final Map<Class<?>, Converter<?>> converters;
+	private final Map<CallbackEnum, Consumer<? super T>> callbacks = new EnumMap<>(CallbackEnum.class);
 
 	public static class Builder<T> {
 		private Mode mode;
@@ -257,6 +260,46 @@ public class CSVEngine<T> {
 				}
 			}
 		}
+		readLifeCycle();
+	}
+
+	private void readLifeCycle() {
+		Method[] methods = clazz.getDeclaredMethods();
+		for(Method method : methods) {
+			addLifeCycle(CallbackEnum.POST_LOAD, method, "postLoad");
+			addLifeCycle(CallbackEnum.POST_PERSIST, method, "postPersist");
+			addLifeCycle(CallbackEnum.PRE_PERSIST, method, "prePersist");
+		}
+	}
+
+	private void addLifeCycle(CallbackEnum callback, Method method, String text) {
+		if(method.getAnnotation(callback.getCallbackAnnotation()) != null) {
+			method.setAccessible(true);
+			var o = this.callbacks.put(callback, new Callback(method));
+			if(o != null) {
+				throw new IllegalStateException("multiple "+ text + " annotation");
+			}
+		}
+	}
+
+	/**
+	 * lifeCycle method consumer
+	 */
+	private static class Callback implements Consumer<Object> {
+		private final Method method;
+
+		private Callback(Method method) {
+			this.method = method;
+		}
+
+		@Override
+		public void accept(Object t) {
+			try {
+				method.invoke(t);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 	private static <E> Stream<E> streamOf(Iterable<E> iterable) {
@@ -321,6 +364,10 @@ public class CSVEngine<T> {
 				}
 			}
 		}
+		Consumer<? super T> postMethod = this.callbacks.get(CallbackEnum.POST_LOAD);
+		if(postMethod != null) {
+			postMethod.accept(t);
+		}
 		return t;
 	}
 
@@ -357,6 +404,8 @@ public class CSVEngine<T> {
 
 	public void write(Iterable<? extends T> list, RecordPrinter printer) throws IOException {
 		try {
+			Consumer<? super T> postPersist = callbacks.get(CallbackEnum.POST_PERSIST);
+			Consumer<? super T> prePersist = callbacks.get(CallbackEnum.PRE_PERSIST);
 			for(T t : list) {
 				List<String> values = new ArrayList<>();
 				for(AnnotationStorer a : storers) {
@@ -376,7 +425,15 @@ public class CSVEngine<T> {
 					String s = converter.getAsString(value);
 					values.add(s);
 				}
+				if(prePersist != null) {
+					prePersist.accept(t);
+				}
+
 				printer.printRecord(values);
+
+				if(postPersist != null) {
+					postPersist.accept(t);
+				}
 			}
 		} catch(IOException ee) {
 			throw ee;
