@@ -20,6 +20,7 @@ public @interface CSVBinding {
 
 	/**
 	 * Determines the order of the column
+	 * In Mode.NAMED, it determines the order of the column during writing.
 	 * @return The value on the row of this position.
 	 */
 	int order() default 0;
