@@ -6,7 +6,7 @@
 
   <groupId>io.github.ritonglue</groupId>
   <artifactId>go-csv</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
   <description>The go-csv library enables the use of annotation when parsing csv files.</description>
 
@@ -50,13 +50,6 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-       <groupId>javax.persistence</groupId>
-       <artifactId>javax.persistence-api</artifactId>
-       <version>2.2</version>
       <scope>test</scope>
     </dependency>
 
