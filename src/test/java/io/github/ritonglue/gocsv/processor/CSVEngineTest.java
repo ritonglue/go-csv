@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
+import java.util.Currency;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
@@ -33,7 +34,9 @@ public class CSVEngineTest {
 			+",1,-1, "//short
 			+",2,-2,"//int
 			+",3,-3, "//long
-			+",c,C,,127,-127,,1.1,-1.1,,2.2,-2.2,,99.9,,123,";
+			+",c,C,,127,-127,,1.1,-1.1,,2.2,-2.2,,99.9,,123,"
+			+",USD"
+			;
 		CSVEngine<Pojo> engine = CSVEngine.builder(Pojo.class).mode(Mode.ORDER).build();
 		List<Pojo> list = toList(engine.parse(new StringReader(csv), CSVFormat.DEFAULT));
 		assertEquals(1, list.size());
@@ -75,6 +78,8 @@ public class CSVEngineTest {
 
 		assertEquals(new BigInteger("123"), p.getBigInteger());
 		assertNull(p.getBigIntegerN());
+
+		assertEquals(Currency.getInstance("USD"), p.getCurrency());
 
 		csv = csv.replaceAll("\\s", "");
 		StringWriter writer = new StringWriter();
@@ -141,7 +146,15 @@ public class CSVEngineTest {
 		private BigInteger bigInteger;
 		@CSVBinding(order = 27)
 		private BigInteger bigIntegerN;
+		@CSVBinding(order = 28)
+		private Currency currency;
 
+		public Currency getCurrency() {
+			return currency;
+		}
+		public void setCurrency(Currency currency) {
+			this.currency = currency;
+		}
 		public BigDecimal getBigDecimalN() {
 			return bigDecimalN;
 		}

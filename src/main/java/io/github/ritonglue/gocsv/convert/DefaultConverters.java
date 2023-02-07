@@ -11,6 +11,7 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +40,7 @@ public class DefaultConverters {
 		map.put(BigInteger.class, new BigIntegerConverter());
 		map.put(Object.class, new ObjectConverter());
 		map.put(String.class, new StringConverter());
+		map.put(Currency.class, new CurrencyConverter());
 
 		map.put(LocalDate.class, DateTimeFormatConverter.of(DateTimeFormatter.ISO_LOCAL_DATE, LocalDate::from));
 		map.put(LocalDateTime.class, DateTimeFormatConverter.of(DateTimeFormatter.ISO_LOCAL_DATE_TIME, LocalDateTime::from));
