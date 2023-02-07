@@ -6,7 +6,7 @@
 
   <groupId>io.github.ritonglue</groupId>
   <artifactId>go-csv</artifactId>
-  <version>1.0.1_SNAPSHOT</version>
+  <version>1.0.1</version>
   <packaging>jar</packaging>
   <description>The go-csv library enables the use of annotation when parsing csv files.</description>
 
