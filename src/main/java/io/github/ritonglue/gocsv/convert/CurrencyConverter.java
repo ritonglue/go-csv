@@ -39,6 +39,6 @@ public class CurrencyConverter implements Converter<Currency> {
 	public String getAsString(Currency value) {
 
 		// If the specified value is null, return a zero-length String
-		return value == null ? "" : value.toString();
+		return value == null ? "" : value.getCurrencyCode();
 	}
 }
