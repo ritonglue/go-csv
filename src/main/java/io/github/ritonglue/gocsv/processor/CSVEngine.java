@@ -160,6 +160,7 @@ public class CSVEngine<T> {
 	}
 
 	private Data getData(AccessibleObject o, String name, Class<?> type) throws ReflectiveOperationException {
+		if(o == null) return null;
 		int order = 0;
 		String header = name;
 		String pattern = "";
@@ -228,6 +229,9 @@ public class CSVEngine<T> {
 			for(PropertyDescriptor pd : pds) {
 				String name = pd.getName();
 				Method getter = pd.getReadMethod();
+				if(getter == null) continue;
+				int modifiers = getter.getModifiers();
+				if(Modifier.isStatic(modifiers)) continue;
 				Data data = getData(getter, name, getter.getReturnType());
 				if(data != null) {
 					AnnotationStorer storer = new AnnotationStorer(pd, data.converter, data.order, data.header);

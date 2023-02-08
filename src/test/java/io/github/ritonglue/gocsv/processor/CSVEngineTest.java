@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -825,6 +826,84 @@ public class CSVEngineTest {
 		public void setLocalDate(LocalDate localDate) {
 			this.localDate = localDate;
 		}
+	}
 
+	@Test
+	public void testOtherMethods() throws IOException {
+		String csv = "5\r\n";
+		CSVEngine<A5> engine = CSVEngine.builder(A5.class)
+			.mode(Mode.ORDER).build();
+		List<A5> list = toList(engine.parse(new StringReader(csv), CSVFormat.DEFAULT));
+		assertEquals(1, list.size());
+		A5 p = list.get(0);
+		assertEquals(5, p.getNumber());
+
+		StringWriter writer = new StringWriter();
+		engine.write(list, writer, CSVFormat.DEFAULT);
+		String tmp = writer.toString();
+		String csvExpected = csv;
+		assertEquals(csvExpected, tmp);
+	}
+
+	public static class A5 implements Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private int number;
+
+		public static int getValue() {
+			return 1;
+		}
+
+		public int getValue(int i) {
+			return i;
+		}
+
+		public int getNumber() {
+			return number;
+		}
+
+		public void setNumber(int number) {
+			this.number = number;
+		}
+	}
+
+	@Test
+	public void testOtherPropMethods() throws IOException {
+		String csv = "5\r\n";
+		CSVEngine<A6> engine = CSVEngine.builder(A6.class)
+			.mode(Mode.ORDER).build();
+		List<A6> list = toList(engine.parse(new StringReader(csv), CSVFormat.DEFAULT));
+		assertEquals(1, list.size());
+		A6 p = list.get(0);
+		assertEquals(5, p.getNumber());
+
+		StringWriter writer = new StringWriter();
+		engine.write(list, writer, CSVFormat.DEFAULT);
+		String tmp = writer.toString();
+		String csvExpected = csv;
+		assertEquals(csvExpected, tmp);
+	}
+
+	public static class A6 implements Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private int number;
+
+		public static int getValue() {
+			return 1;
+		}
+
+		public int getValue(int i) {
+			return i;
+		}
+
+		@CSVBinding(order = 0)
+		public int getNumber() {
+			return number;
+		}
+
+		public void setNumber(int number) {
+			this.number = number;
+		}
 	}
 }
