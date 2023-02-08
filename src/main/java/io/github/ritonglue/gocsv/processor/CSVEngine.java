@@ -10,6 +10,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -144,6 +145,7 @@ public class CSVEngine<T> {
 		} else {
 			for(PropertyDescriptor pd : pds) {
 				Method getter = pd.getReadMethod();
+				if(getter == null) continue;
 				if(getter.isAnnotationPresent(CSVBinding.class)) {
 					isFieldAccess = false;
 					break;
@@ -213,6 +215,8 @@ public class CSVEngine<T> {
 		if(isFieldAccess) {
 			Field[] fields = clazz.getDeclaredFields();
 			for(Field field : fields) {
+				int modifiers = field.getModifiers();
+				if(Modifier.isStatic(modifiers)) continue;
 				String name = field.getName();
 				Data data = getData(field, name, field.getType());
 				if(data != null) {
