@@ -12,6 +12,7 @@ import java.util.Objects;
 import org.apache.commons.csv.CSVFormat;
 import org.junit.Test;
 
+import io.github.ritonglue.gocsv.annotation.CSVBinding;
 import io.github.ritonglue.gocsv.annotation.Convert;
 import io.github.ritonglue.gocsv.convert.Converter;
 import io.github.ritonglue.gocsv.convert.ConverterException;
@@ -152,6 +153,117 @@ public class CSVConverterTest {
 			} catch (Exception e) {
 				throw new ConverterException(e);
 			}
+		}
+	}
+
+	@Test
+	public void testEnumConverter() throws IOException {
+		//problem how to define order headers ?
+		String csv = "quoteMode,quoteMode1\r\nCASH,C\r\nPERCENTAGE,%\r\nPERCENT,%";
+		CSVEngine<B> engine = CSVEngine.builder(B.class).mode(Mode.NAMED)
+			.register(QuoteMode.class, new QuoteModeConverter())
+			.build();
+		List<B> list = toList(engine.parse(new StringReader(csv), CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build()));
+		assertEquals(3, list.size());
+		B p = list.get(0);
+		B a = new B();
+		a.setQuoteMode(QuoteMode.CASH);
+		a.setQuoteMode1(QuoteMode.CASH);
+		assertEquals(a.getQuoteMode(), p.getQuoteMode());
+		assertEquals(a.getQuoteMode1(), p.getQuoteMode1());
+
+		p = list.get(1);
+		a = new B();
+		a.setQuoteMode(QuoteMode.PERCENTAGE);
+		a.setQuoteMode1(QuoteMode.PERCENTAGE);
+		assertEquals(a.getQuoteMode(), p.getQuoteMode());
+		assertEquals(a.getQuoteMode1(), p.getQuoteMode1());
+
+		p = list.get(2);
+		a = new B();
+		a.setQuoteMode(QuoteMode.PERCENTAGE);
+		a.setQuoteMode1(QuoteMode.PERCENTAGE);
+		assertEquals(a.getQuoteMode(), p.getQuoteMode());
+		assertEquals(a.getQuoteMode1(), p.getQuoteMode1());
+
+		StringWriter writer = new StringWriter();
+		engine.write(list, writer, CSVFormat.DEFAULT);
+		String tmp = writer.toString();
+		csv = "quoteMode,quoteMode1\r\nCASH,CASH\r\nPERCENTAGE,PERCENTAGE\r\nPERCENTAGE,PERCENTAGE";
+		assertEquals(csv + "\r\n", tmp);
+
+	}
+
+	public enum QuoteMode {CASH, PERCENTAGE}
+
+	public static class B {
+		@CSVBinding(order = 1)
+		private QuoteMode quoteMode;
+
+		@CSVBinding(order = 2)
+		@Convert(converter = QuoteModeConverter1.class)
+		private QuoteMode quoteMode1;
+
+		public QuoteMode getQuoteMode1() {
+			return quoteMode1;
+		}
+
+		public void setQuoteMode1(QuoteMode quoteMode1) {
+			this.quoteMode1 = quoteMode1;
+		}
+
+		public QuoteMode getQuoteMode() {
+			return quoteMode;
+		}
+
+		public void setQuoteMode(QuoteMode quoteMode) {
+			this.quoteMode = quoteMode;
+		}
+	}
+
+	public static class QuoteModeConverter1 implements Converter<QuoteMode> {
+
+		@Override
+		public QuoteMode getAsObject(String value) {
+			if(value == null) return null;
+			value = value.strip();
+			if(value.isEmpty()) return null;
+			switch(value) {
+			case "C":
+				return QuoteMode.CASH;
+			case "%":
+				return QuoteMode.PERCENTAGE;
+			default:
+				throw new RuntimeException("bad quoteMode: " + value);
+			}
+		}
+
+		@Override
+		public String getAsString(QuoteMode value) {
+			return value == null ? null : value.name();
+		}
+	}
+	public static class QuoteModeConverter implements Converter<QuoteMode> {
+
+		@Override
+		public QuoteMode getAsObject(String value) {
+			if(value == null) return null;
+			value = value.strip();
+			if(value.isEmpty()) return null;
+			switch(value) {
+			case "CASH":
+				return QuoteMode.CASH;
+			case "PERCENT":
+			case "PERCENTAGE":
+				return QuoteMode.PERCENTAGE;
+			default:
+				throw new RuntimeException("bad quoteMode: " + value);
+			}
+		}
+
+		@Override
+		public String getAsString(QuoteMode value) {
+			return value == null ? null : value.name();
 		}
 	}
 }

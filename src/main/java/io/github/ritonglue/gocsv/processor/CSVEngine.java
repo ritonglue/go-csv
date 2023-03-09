@@ -193,9 +193,13 @@ public class CSVEngine<T> {
 		}
 		if(converter == null) {
 			if(type.isEnum()) {
-				@SuppressWarnings({ "unchecked", "rawtypes" })
-				EnumConverter tmp = new EnumConverter(type);
-				this.converters.put(type, tmp);
+				//converter registered ?
+				converter = this.converters.get(type);
+				if(converter == null) {
+					@SuppressWarnings({ "unchecked", "rawtypes" })
+					EnumConverter tmp = new EnumConverter(type);
+					this.converters.put(type, tmp);
+				}
 			}
 			//auto-apply
 			converter = this.converters.get(type);
