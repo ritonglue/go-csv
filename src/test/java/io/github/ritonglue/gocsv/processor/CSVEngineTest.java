@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -15,9 +16,12 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.Currency;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.junit.Test;
 
 import io.github.ritonglue.gocsv.annotation.Access;
@@ -646,6 +650,7 @@ public class CSVEngineTest {
 		private Integer value2;
 		private String value3;
 
+		@CSVBinding(order = 0)
 		public int getVal1() {
 			return value1;
 		}
@@ -659,6 +664,7 @@ public class CSVEngineTest {
 		public void setVal2(Integer value2) {
 			this.value2 = value2;
 		}
+		@CSVBinding(order = 1)
 		public String getVal3() {
 			return value3;
 		}
@@ -904,6 +910,56 @@ public class CSVEngineTest {
 
 		public void setNumber(int number) {
 			this.number = number;
+		}
+	}
+
+	@Test
+	public void testTwoLinesHeader() throws IOException {
+		String csv = "c1,c3\r\nval1,val3\r\n1,bla";
+		CSVFormat format = CSVFormat.DEFAULT;
+		List<String> headers = null;
+
+		//read headers
+		try(Reader reader = new StringReader(csv)) {
+			CSVParser parser = format.parse(reader);
+			Iterator<CSVRecord> iterator = parser.iterator();
+
+			CSVRecord record = null;
+			assertTrue(iterator.hasNext());
+			record = iterator.next();
+			assertEquals("c1", record.get(0));
+			assertEquals("c3", record.get(1));
+
+			assertTrue(iterator.hasNext());
+			record = iterator.next();
+			assertEquals("val1", record.get(0));
+			assertEquals("val3", record.get(1));
+			headers = record.toList();
+		}
+
+		try(Reader reader = new StringReader(csv)) {
+			format = format.builder().setHeader(headers.toArray(new String[0])).build();
+			CSVParser parser = format.parse(reader);
+			Iterator<CSVRecord> iterator = parser.iterator();
+			iterator = parser.iterator();
+
+			assertTrue(iterator.hasNext());
+			iterator.next();
+			assertTrue(iterator.hasNext());
+			iterator.next();
+
+			CSVEngine<P8> engine = CSVEngine.builder(P8.class).mode(Mode.NAMED).build();
+			List<P8> list = toList(engine.parse(parser));
+			assertEquals(1, list.size());
+			P8 p = list.get(0);
+			assertEquals(1, p.getVal1());
+			assertEquals("bla", p.getVal3());
+
+			StringWriter writer = new StringWriter();
+			engine.write(list, writer, CSVFormat.DEFAULT);
+			String tmp = writer.toString();
+			String csvExpected = "val1,val3\r\n1,bla\r\n";
+			assertEquals(csvExpected, tmp);
 		}
 	}
 }
