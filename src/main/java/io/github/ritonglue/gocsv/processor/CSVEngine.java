@@ -324,10 +324,15 @@ public class CSVEngine<T> {
 
 	public Stream<T> parseAsStream(Reader reader,  CSVFormat format) throws IOException {
 		if(mode == Mode.NAMED) {
-//			format.withFirstRecordAsHeader();
-			format = format.builder().setHeader().setSkipHeaderRecord(true).build();
+			String[] headers = format.getHeader();
+			if(headers == null) {
+				format = format.builder().setHeader().setSkipHeaderRecord(true).build();
+			}
 		}
-		CSVParser parser = format.parse(reader);
+		return parseAsStream(format.parse(reader));
+	}
+
+	public Stream<T> parseAsStream(CSVParser parser) {
 		Function<AnnotationStorer, Integer> getterIndex = getterIndex(parser);
 		return streamOf(parser)
 				.filter(this.predicate)
@@ -337,6 +342,10 @@ public class CSVEngine<T> {
 
 	public Iterable<T> parse(Reader reader,  CSVFormat format) throws IOException {
 		return iterableOf(parseAsStream(reader, format));
+	}
+
+	public Iterable<T> parse(CSVParser parser) throws IOException {
+		return iterableOf(parseAsStream(parser));
 	}
 
 	private Function<AnnotationStorer, Integer> getterIndex(CSVParser parser) {
