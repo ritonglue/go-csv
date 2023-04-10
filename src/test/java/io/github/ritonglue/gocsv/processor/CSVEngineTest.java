@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Currency;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -939,17 +940,11 @@ public class CSVEngineTest {
 
 		try(Reader reader = new StringReader(csv)) {
 			format = format.builder().setHeader(headers.toArray(new String[0])).build();
-			CSVParser parser = format.parse(reader);
-			Iterator<CSVRecord> iterator = parser.iterator();
-			iterator = parser.iterator();
-
-			assertTrue(iterator.hasNext());
-			iterator.next();
-			assertTrue(iterator.hasNext());
-			iterator.next();
-
-			CSVEngine<P8> engine = CSVEngine.builder(P8.class).mode(Mode.NAMED).build();
-			List<P8> list = toList(engine.parse(parser));
+			Predicate<CSVRecord> pred = o -> o.getRecordNumber() > 2;
+			CSVEngine<P8> engine = CSVEngine.builder(P8.class).mode(Mode.NAMED)
+				.filter(pred)
+				.build();
+			List<P8> list = toList(engine.parse(reader, format));
 			assertEquals(1, list.size());
 			P8 p = list.get(0);
 			assertEquals(1, p.getVal1());
