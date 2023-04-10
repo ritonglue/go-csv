@@ -957,4 +957,25 @@ public class CSVEngineTest {
 			assertEquals(csvExpected, tmp);
 		}
 	}
+
+	@Test
+	public void testIgnoreCase() throws IOException {
+		String csv = "Val1,Val3\r\n1,bla";
+		CSVFormat format = CSVFormat.DEFAULT.builder().setIgnoreHeaderCase(true).build();
+
+		try(Reader reader = new StringReader(csv)) {
+			CSVEngine<P8> engine = CSVEngine.builder(P8.class).mode(Mode.NAMED).build();
+			List<P8> list = toList(engine.parse(reader, format));
+			assertEquals(1, list.size());
+			P8 p = list.get(0);
+			assertEquals(1, p.getVal1());
+			assertEquals("bla", p.getVal3());
+
+			StringWriter writer = new StringWriter();
+			engine.write(list, writer, CSVFormat.DEFAULT);
+			String tmp = writer.toString();
+			String csvExpected = "val1,val3\r\n1,bla\r\n";
+			assertEquals(csvExpected, tmp);
+		}
+	}
 }
