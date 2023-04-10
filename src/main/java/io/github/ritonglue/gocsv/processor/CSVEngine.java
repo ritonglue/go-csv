@@ -326,7 +326,7 @@ public class CSVEngine<T> {
 		if(mode == Mode.NAMED) {
 			String[] headers = format.getHeader();
 			if(headers == null) {
-				format = format.builder().setHeader().setSkipHeaderRecord(true).build();
+				format = format.builder().setHeader().build();
 			}
 		}
 		return parseAsStream(format.parse(reader));
@@ -468,7 +468,6 @@ public class CSVEngine<T> {
 		if(mode == Mode.NAMED) {
 			String[] headers = storers.stream().map(AnnotationStorer::getHeader)
 				.collect(Collectors.toList()).toArray(EMPTY_STRINGS);
-	//		format.withHeader(headers);
 			format = format.builder().setHeader(headers).build();
 		}
 		try(RecordPrinter printer = new RecordPrinterImpl(appendable, format)) {
